@@ -29,8 +29,8 @@
 __doc__      = "Programma om iso xml's te beheren"
 __rights__   = 'provincie Noord-Brabant'
 __author__   = 'Jan van Sambeek'
-__date__     = ['03-2016']
-__version__  = '1.0.1'
+__date__     = ['03-2016', '01-2017']
+__version__  = '1.0.3'
 
 # ----- IMPORT LIBRARIES -----------------------------------------------
 
@@ -266,12 +266,12 @@ class MainWindow(wx.Frame):
     start_tijd = time.time()
     # bepaal de pid naam
     if sys.platform == 'linux2': pid_name = 'python'
-    elif sys.platform == 'win32': pid_name = 'pythonw.exe'
+    elif sys.platform == 'win32': pid_name = 'Metadata_Master.exe'
     # loop door alle proces ids
     for pid_dict in [pid.as_dict(attrs=['name', 'username']) for pid in psutil.process_iter()]:
       # kijk of python al geopend is door een andere gebruiker
       if pid_dict['name'] == pid_name and str(pid_dict['username']).split('\\')[-1] != getpass.getuser():
-        # als er een username is 
+        # als er een username is
         if pid_dict['username']:
           # open een message dialog
           MsgBox = wx.MessageDialog(None, 'Metadata Master is al in gebruik door: %s' %(str(pid_dict['username']).split('\\')[-1]), 'METADATA MASTER', wx.OK|wx.ICON_INFORMATION)
@@ -325,12 +325,12 @@ class MainWindow(wx.Frame):
     if os.path.isfile(logo): self.SetIcon(wx.Icon(logo, wx.BITMAP_TYPE_PNG))
     # maak de bestandmenu
     bestandmenu = wx.Menu()
-    self.MenuItem_xml_dir = bestandmenu.Append(101, 'Open XML dir', 'Lees XML bestanden uit een locale directorie')
+    self.MenuItem_xml_dir = bestandmenu.Append(101, 'Open XML-Map', 'Lees XML bestanden uit een locale map')
     self.MenuItem_xml_dir.Enable(True)
-    self.MenuItem_stand_xml_dir = bestandmenu.Append(102, 'Standaard XML dir', 'Lees XML bestanden uit de standaard directorie')
+    self.MenuItem_stand_xml_dir = bestandmenu.Append(102, 'Standaard XML-Map', 'Lees XML bestanden uit de standaard map')
     self.MenuItem_stand_xml_dir.Enable(False)
-    bestandmenu.Append(103, 'Export bestanden overzicht', 'Exporteer een overzicht van de inhoud')
-    bestandmenu.Append(104, 'Export contact gegevens', 'Exporteer de contact gegevens')
+    bestandmenu.Append(103, 'Export Bestandenlijst', 'Exporteer een overzicht van de inhoud')
+    bestandmenu.Append(104, 'Export Contactgegevens', 'Exporteer de contact gegevens')
     bestandmenu.Append(105, 'Sluiten', 'Beeindig het programma')
     # maak het selectie menu
     selectiemenu = wx.Menu()
@@ -358,7 +358,7 @@ class MainWindow(wx.Frame):
     repareermenu = wx.Menu()
     self.RepareerItem_uniek = repareermenu.Append(401, 'Repareer unieke waardes', 'Repareer de data op basis van unieke waardes')
     self.RepareerItem_uniek.Enable(False)
-    self.RepareerItem_contact = repareermenu.Append(402, 'Repareer contact gegevens', 'Repareer de contact gegevens van de bron')
+    self.RepareerItem_contact = repareermenu.Append(402, 'Repareer Contactgegevens', 'Repareer de contact gegevens van de bron')
     self.RepareerItem_contact.Enable(False)
     self.RepareerItem_overigebeperkingen = repareermenu.Append(410, 'Repareer publicdomain', 'Repareer overige beperkingen creative commons')
     self.RepareerItem_overigebeperkingen.Enable(False) 
@@ -1292,7 +1292,7 @@ class MainWindow(wx.Frame):
             # verwijder spaties aan het einde van de regel
             regel = regel.rstrip(' ')
             # zet in het begin de spaties op 0
-            if regel.startswith('<gmd:MD_Metadata') or regel.startswith('<MD_Metadata') or regel.startswith('<?xml version="1.0"'): spaties = 0
+            if regel.startswith('<gmd:MD_Metadata') or regel.startswith('<MD_Metadata') or regel.startswith('<?xml'): spaties = 0
             elif regel.startswith('</') and vorige_regel.startswith('<'): spaties += -2
             elif vorige_regel.startswith('</') or vorige_regel.endswith('/>'): spaties += 0
             elif regel.startswith('<') and vorige_regel.startswith('<'): spaties += 2
@@ -1319,9 +1319,8 @@ class MainWindow(wx.Frame):
   def onHelp(self,event):
     """ Help menu """
     # open het help bestand
-    if os.path.isfile('%s.pdf' %(self.start_dir+os.sep+os.path.splitext(self.bestand)[0])): 
-      if sys.platform == 'linux2': os.system('evince "%s.pdf"' %(self.start_dir+os.sep+os.path.splitext(self.bestand)[0]))
-      elif sys.platform == 'win32': os.startfile('"%s.pdf"' %(self.start_dir+os.sep+os.path.splitext(self.bestand)[0]))
+    if sys.platform == 'linux2': os.system('firefox "%s"' %(self.cfg.get('dirs')['help']))
+    elif sys.platform == 'win32': os.startfile('"%s"' %(self.cfg.get('dirs')['help']))
     return
 
 # -----
@@ -1341,8 +1340,8 @@ class MainWindow(wx.Frame):
     info.SetCopyright('(C) 2016 %s' %(__author__))
     info.SetWebSite('http://www.provinciaalgeoregister.nl/georegister/pgr.do')
     info.SetLicence('\n%s wordt verspreid onder GNU GPL3 licentie. \n\nhttps://www.gnu.org/licenses/gpl.html' %os.path.splitext(self.bestand)[0])
-    info.AddDeveloper('%s' %(__author__))
-    info.AddDocWriter('%s' %(__author__))
+    info.AddDeveloper('binaries:  https://osgeo.nl/geonetwork-gebruikersgroep/best-practices\nsource code:  https://github.com/provincies\n\n%s' %(__author__))
+    info.AddDocWriter('%s' %('Carel Stortelder'))
     info.AddArtist('%s' %(__author__))
     # maak de wx.AboutBox widget
     wx.AboutBox(info)
