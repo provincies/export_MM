@@ -269,46 +269,44 @@ def remove_xml_data(metadata_xml, strings):
     
 # ----- VERVANG CREATIVE COMMONS ---------------------------------------
  
-def vervang_creative_commons(metadata_xml):
+def vervang_creative_commons(xml): #(metadata_xml):
   """
   Repareer een XML tussen een begin en een eindstring
   """
   # zoek stings
   zoekstring = 'gmd:MD_LegalConstraints>'
-  ccstring = 'http://creativecommons.org/publicdomain/mark/1.0/deed.nl'
-  # lees het meta bestand uit 
-  with open(metadata_xml, 'r') as bestand: xml = bestand.read()
+  # als de zoekstring in de xml voorkomt
   if xml.find(zoekstring) >= 0: 
     ns_gmd = 'gmd:'
     ns_gco = ' xmlns:gco="http://www.isotc211.org/2005/gco"'
+  # zoek eventueel zonder gmd
   elif xml.find(zoekstring.split(':')[-1]) >= 0: 
     ns_gmd = ''
     ns_gco = ''
     zoekstring = zoekstring.split(':')[-1]
-  # vervang string
-  vervangstring = '%sMD_LegalConstraints>\n' %(ns_gmd)
-  vervangstring += '<%saccessConstraints>\n' %(ns_gmd)
-  vervangstring += '<%sMD_RestrictionCode codeList="./resources/codeList.xml#MD_RestrictionCode" codeListValue="otherRestrictions" />\n' %(ns_gmd)
-  vervangstring += '</%saccessConstraints>\n' %(ns_gmd)
-  vervangstring += '<%suseConstraints>\n' %(ns_gmd)
-  vervangstring += '<%sMD_RestrictionCode codeList="./resources/codeList.xml#MD_RestrictionCode" codeListValue="otherRestrictions" />\n' %(ns_gmd)
-  vervangstring += '</%suseConstraints>\n' %(ns_gmd)
-  vervangstring += '<%sotherConstraints>\n' %(ns_gmd)
-  vervangstring += '<gco:CharacterString%s>geen beperkingen</gco:CharacterString>\n' %(ns_gco)
-  vervangstring += '</%sotherConstraints>\n' %(ns_gmd)
-  vervangstring += '<%sotherConstraints>\n' %(ns_gmd)
-  vervangstring += '<gco:CharacterString%s>http://creativecommons.org/publicdomain/mark/1.0/deed.nl</gco:CharacterString>\n' %(ns_gco)
-  vervangstring += '</%sotherConstraints>\n' %(ns_gmd)
-  vervangstring += '</%sMD_LegalConstraints>\n' %(ns_gmd)
   # als de zoek string aanwezig is
-  if xml.find(zoekstring) >= 0 and ccstring in xml:
+  if xml.find(zoekstring) >= 0: # and ccstring in xml:
+    # vervang string
+    vervangstring = '%sMD_LegalConstraints>\n' %(ns_gmd)
+    vervangstring += '<%saccessConstraints>\n' %(ns_gmd)
+    vervangstring += '<%sMD_RestrictionCode codeList="./resources/codeList.xml#MD_RestrictionCode" codeListValue="otherRestrictions" />\n' %(ns_gmd)
+    vervangstring += '</%saccessConstraints>\n' %(ns_gmd)
+    vervangstring += '<%suseConstraints>\n' %(ns_gmd)
+    vervangstring += '<%sMD_RestrictionCode codeList="./resources/codeList.xml#MD_RestrictionCode" codeListValue="otherRestrictions" />\n' %(ns_gmd)
+    vervangstring += '</%suseConstraints>\n' %(ns_gmd)
+    vervangstring += '<%sotherConstraints>\n' %(ns_gmd)
+    vervangstring += '<gco:CharacterString%s>geen beperkingen</gco:CharacterString>\n' %(ns_gco)
+    vervangstring += '</%sotherConstraints>\n' %(ns_gmd)
+    vervangstring += '<%sotherConstraints>\n' %(ns_gmd)
+    vervangstring += '<gco:CharacterString%s>http://creativecommons.org/publicdomain/mark/1.0/deed.nl</gco:CharacterString>\n' %(ns_gco)
+    vervangstring += '</%sotherConstraints>\n' %(ns_gmd)
+    vervangstring += '</%sMD_LegalConstraints>\n' %(ns_gmd)
     # bepaal de nieuwe xml inhoud
     xml = '%s%s%s' %(xml[:xml.find(zoekstring)], vervangstring, xml[xml.rfind(zoekstring)+len(zoekstring):])
     # pas de datestamp aan
     xml = vervang_datestamp(xml)
-    # schrijf alles weg
-    with open(metadata_xml, 'w') as bestand: bestand.write(xml)
-  return
+    return xml
+  return False
 
 # ----- ZOEK TEKST WAARDE ------------------------------------------
 

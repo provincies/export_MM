@@ -29,8 +29,8 @@
 __doc__      = "Programma om iso xml's te beheren"
 __rights__   = 'provincie Noord-Brabant'
 __author__   = 'Jan van Sambeek'
-__date__     = ['03-2016', '01-2017']
-__version__  = '1.0.3'
+__date__     = ['03-2016', '01-2017', '02-2017']
+__version__  = '1.0.4'
 
 # ----- IMPORT LIBRARIES -----------------------------------------------
 
@@ -45,22 +45,28 @@ class FilterDialog(wx.Dialog):
   Hierin wordt het menu filter gemaakt.
   """
   def __init__(self, parent, id, title, titel, resume):
-    wx.Dialog.__init__(self, parent, id, title, size=(270, 220))
+    wx.Dialog.__init__(self, parent, id, title, size=(270, 300))
     # bij microsoft gebruik een andere onder afstand voor de buttons
     if sys.platform == 'win32': button_dist = 60
     else: button_dist = 50
     # plaats tekst in het dialoog venster
-    wx.StaticText(self, -1, 'filter voor de Titel: ', pos=(15, 20))
+    wx.StaticText(self, -1, 'filter voor de Bestandsnaam: ', pos=(15, 20))
     # maak een tekst control venster    
-    self.titel = wx.TextCtrl(self, 113, pos=(10,40), size=(245, -1), value=titel)
+    self.bestandsnaam = wx.TextCtrl(self, 113, pos=(10,40), size=(245, -1))
     # plaats tekst in het dialoog venster
     wx.StaticText(self, -1, 'of ', pos=(15, 70))
     # plaats tekst in het dialoog venster
-    wx.StaticText(self, -1, 'filter voor de Samenvatting: ', pos=(15, 100))
+    wx.StaticText(self, -1, 'filter voor de Titel: ', pos=(15, 100))
+    # maak een tekst control venster    
+    self.titel = wx.TextCtrl(self, 113, pos=(10,120), size=(245, -1), value=titel)
+    # plaats tekst in het dialoog venster
+    wx.StaticText(self, -1, 'of ', pos=(15, 150))
+    # plaats tekst in het dialoog venster
+    wx.StaticText(self, -1, 'filter voor de Samenvatting: ', pos=(15, 180))
     # lees de window grote uit
     scherm_breedte, scherm_hoogte = self.GetSize()
     # maak een tekst control venster    
-    self.resume = wx.TextCtrl(self, 113, pos=(10,120), size=(245, -1))
+    self.resume = wx.TextCtrl(self, 113, pos=(10,200), size=(245, -1))
     # zet 2 buttons met de focus op oke
     self.btn_cc = wx.Button(self, 120, 'Cancel', pos=(25, scherm_hoogte-button_dist))
     self.btn_ok = wx.Button(self, 121, 'Ok', pos=(160, scherm_hoogte-button_dist))
@@ -77,6 +83,7 @@ class FilterDialog(wx.Dialog):
 
   def OnCancel(self, event):
     """   """
+    self.bestandsnaam = ''
     self.titel = ''
     self.resume = ''
     self.Close()
@@ -86,6 +93,7 @@ class FilterDialog(wx.Dialog):
         
   def OnOK(self, event):
     """   """
+    self.bestandsnaam = unicode(self.bestandsnaam.GetValue())
     self.titel = unicode(self.titel.GetValue())
     self.resume = unicode(self.resume.GetValue())
     self.Close()
@@ -342,17 +350,20 @@ class MainWindow(wx.Frame):
     self.SelectieItem_verwijder.Enable(True)        
     # maak het filtermenu
     filtermenu = wx.Menu()
-    self.FilterItem_filter = filtermenu.Append(301, 'Filter tekst', 'Beperk de Titel en de Samenvatting met een filter')
+    self.FilterItem_filter = filtermenu.Append(301, 'Filter BTS', 'Filter voor de Bestandsnaam, de Titel of de Samenvatting')
     self.FilterItem_filter.Enable(True)
-    self.FilterItem_kwaliteit = filtermenu.Append(302, 'Filter PGR kwaliteit', 'Beperk de resultaten met kwaliteits criteria')
+    if self.cfg.get('zoek_string'): 
+      self.FilterItem_ConfigTekst = filtermenu.Append(302, 'Filter zoek string', 'Filter voor de zoek string in het config bestand')
+      self.FilterItem_ConfigTekst.Enable(True)
+    self.FilterItem_kwaliteit = filtermenu.Append(303, 'Filter PGR kwaliteit', 'Beperk de resultaten met PGR kwaliteits criteria')
     self.FilterItem_kwaliteit.Enable(True)    
-    self.FilterItem_uniek = filtermenu.Append(303, 'Filter unieke waardes', 'Beperk de resultaten met unieke waardes')
+    self.FilterItem_uniek = filtermenu.Append(304, 'Filter unieke waardes', 'Beperk de resultaten met unieke waardes')
     self.FilterItem_uniek.Enable(True)
-    self.FilterItem_trefwoord = filtermenu.Append(304, 'Filter trefwoorden', 'Filter op trefwoorden die niet voorkomen in de thesaurs')
+    self.FilterItem_trefwoord = filtermenu.Append(305, 'Filter trefwoorden', 'Filter op trefwoorden die niet voorkomen in de thesaurs')
     self.FilterItem_trefwoord.Enable(True)     
-    self.FilterItem_selected = filtermenu.Append(305, 'Filter selectie', 'Beperk de resultaten tot de geselecteerde metadata')
+    self.FilterItem_selected = filtermenu.Append(306, 'Filter selectie', 'Beperk de resultaten tot de geselecteerde metadata')
     self.FilterItem_selected.Enable(True)  
-    self.FilterItem_no_selected = filtermenu.Append(306, 'Verwijder filters', 'Verwijder de selectie')
+    self.FilterItem_no_selected = filtermenu.Append(307, 'Verwijder filters', 'Verwijder de selectie')
     self.FilterItem_no_selected.Enable(True)    
     # maak het repareer menu
     repareermenu = wx.Menu()
@@ -438,11 +449,12 @@ class MainWindow(wx.Frame):
     wx.EVT_MENU(self, 202, self.menuExportMetadata)
     wx.EVT_MENU(self, 203, self.menuVerwijderMetadata)
     wx.EVT_MENU(self, 301, self.menuFilterTekst)
-    wx.EVT_MENU(self, 302, self.menuFilterKwaliteit)
-    wx.EVT_MENU(self, 303, self.menuFilterUniek) 
-    wx.EVT_MENU(self, 304, self.menuFilterTrefWoord) 
-    wx.EVT_MENU(self, 305, self.menuFilterSelectie) 
-    wx.EVT_MENU(self, 306, self.menuFilterOff)
+    wx.EVT_MENU(self, 302, self.menuFilterConfigTekst)
+    wx.EVT_MENU(self, 303, self.menuFilterKwaliteit)
+    wx.EVT_MENU(self, 304, self.menuFilterUniek) 
+    wx.EVT_MENU(self, 305, self.menuFilterTrefWoord) 
+    wx.EVT_MENU(self, 306, self.menuFilterSelectie) 
+    wx.EVT_MENU(self, 307, self.menuFilterOff)
     wx.EVT_MENU(self, 401, self.menuRepareerUniek)
     wx.EVT_MENU(self, 402, self.menuRepareerContact)
     wx.EVT_MENU(self, 410, self.menuRepareerPublicDomain)
@@ -645,10 +657,12 @@ class MainWindow(wx.Frame):
     # zet de variabelen voor de menu filter leeg
     self.ortitel = self.orresume = ''
     # maak een object voor het filteren
-    orfilter_obj = FilterDialog(None, -1, title='FILTER TEKST', titel=self.ortitel, resume=self.orresume)
+    orfilter_obj = FilterDialog(None, -1, title='FILTER BTS', titel=self.ortitel, resume=self.orresume)
     orfilter_obj.ShowModal()
     # lees de verschillende waardes uit het object
     # geef een lege string als het venster wordt weggeklikt
+    if type(orfilter_obj.bestandsnaam) is unicode: self.orbestandsnaam = orfilter_obj.bestandsnaam
+    else: self.orbestandsnaam = ''    
     if type(orfilter_obj.titel) is unicode: self.ortitel = orfilter_obj.titel
     else: self.ortitel = ''
     if type(orfilter_obj.resume) is unicode: self.orresume = orfilter_obj.resume
@@ -659,6 +673,10 @@ class MainWindow(wx.Frame):
     XML_rows = []
     # loop door de huidige XML bestanden
     for XML_row in [regel[0] for regel in self.XML_bestanden]:
+      # voeg de bestandsnaam toe
+      bestandsnaam = XML_row
+      # verwijder de \n
+      bestandsnaam = bestandsnaam.rstrip()
       # voeg de titel toe
       titel = self.XML_data[XML_row]['bron titel'][0]
       # verwijder de \n
@@ -674,13 +692,36 @@ class MainWindow(wx.Frame):
       # als de titel en samenvatting
       if titel and samenvatting: 
         # Filter de resultaten en voeg een True toe aan XML_rows
-        if self.VoegtoeFilter(titel, samenvatting): XML_rows.append(XML_row)
+        if self.VoegtoeFilter(bestandsnaam, titel, samenvatting): XML_rows.append(XML_row)
     # stel de nieuwe XML bestanden vast
     self.XML_bestanden = sorted([[result, self.XML_data[result]['bron titel'][0]] for result in XML_rows])
     # vul de data met de XML bestanden
     self.vul_data()
     return
- 
+
+# -----
+
+  def menuFilterConfigTekst(self, event):
+    """ plaats een filter met de zoek string in het config bestand"""
+    # lees de zoek string uit het config bestand
+    zoek_string= self.cfg.get('zoek_string')
+    # maak een lege list
+    XML_rows = []    
+    # loop door de uit te lezen directorie
+    for metadata_xml in os.listdir(self.XML_dir):
+      # kijk of het een XML bestand is
+      if os.path.splitext(metadata_xml)[1] == '.xml':
+        # open het bestand en plaats het in de xml variablele
+        with open(self.XML_dir+os.sep+metadata_xml, 'r') as bestand: xml = bestand.read().decode('utf-8')
+        # als de zoek string in de xml voorkomt voeg hem dan toe aan XML_rows
+        if zoek_string in xml: XML_rows.append(os.path.splitext(metadata_xml)[0])
+    # stel de nieuwe XML bestanden vast
+    self.XML_bestanden = sorted([[result, self.XML_data[result]['bron titel'][0]] for result in XML_rows])
+    # vul de data met de XML bestanden
+    self.vul_data()
+    return
+    #~ print(XML_rows)
+
 # ----
  
   def menuFilterKwaliteit(self, event):
@@ -1109,31 +1150,22 @@ class MainWindow(wx.Frame):
     if MsgBox.ShowModal() == wx.ID_OK:
       # maak een list met de volledige bestandsnamen
       metadata_xmls = [self.XML_dir+os.sep+XML[0]+'.xml' for XML in self.XML_bestanden]
-      # bepaal het aantal xml bestanden
-      aantal_xmls = len(metadata_xmls)
-      # bepaal het aantal stappen
-      stap = 100
-      # maak een lege resultaten list
-      results = []
-      # loop door de gegevens in stappen
-      for aantal in range(0, aantal_xmls, stap):
-        # maak een pool voor het aantal request
-        pool = multiprocessing.Pool(processes=stap)
-        # map metadata xmls naar de correct_xml en vang de resultaten af
-        results.extend(pool.map(vervang_creative_commons, metadata_xmls[aantal:aantal+stap]))
-        # geen processen meer toevoegen
-        pool.close()
-        # wacht tot alles verwerkt is
-        pool.join()
       # wijzig de datestamp en overige beperkingen in self.XML_data
       for metadata_xml in metadata_xmls:
         # lees de metadata xml uit 
         with open(metadata_xml, 'r') as bestand: xml = bestand.read()
+        # als de creative commons string voorkomt in de xml
         if 'http://creativecommons.org/publicdomain/mark/1.0/deed.nl' in xml:
-          # dateStamp in self.XML_data aanpassen
-          self.XML_data[os.path.splitext(os.path.split(metadata_xml)[1])[0]]['metadata datum'][0] = datetime.date.today().isoformat()
-          # overige beperkingen aanpassen
-          self.XML_data[os.path.splitext(os.path.split(metadata_xml)[1])[0]]['overige beperkingen'] = ['geen beperkingen', 'http://creativecommons.org/publicdomain/mark/1.0/deed.nl']
+          # vervang de Esri bug
+          vervang_xml = vervang_creative_commons(xml)
+          # als de Esri bug vervangen is 
+          if vervang_xml:
+            # schrijf alles weg
+            with open(metadata_xml, 'w') as bestand: bestand.write(vervang_xml)
+            # dateStamp in self.XML_data aanpassen
+            self.XML_data[os.path.splitext(os.path.split(metadata_xml)[1])[0]]['metadata datum'][0] = datetime.date.today().isoformat()
+            # overige beperkingen aanpassen
+            self.XML_data[os.path.splitext(os.path.split(metadata_xml)[1])[0]]['overige beperkingen'] = ['geen beperkingen', 'http://creativecommons.org/publicdomain/mark/1.0/deed.nl']
       # open een message dialog
       MsgBox = wx.MessageDialog(None, 'Repareer publicdomain is verwerkt.', 'VERVANG CREATIVE COMMON LICENTIE', wx.OK|wx.ICON_INFORMATION)
       # als in de message dialog op ok wordt gedrukt, doe dan niets
@@ -1601,7 +1633,7 @@ class MainWindow(wx.Frame):
     for metadata_xml in os.listdir(self.XML_dir):
       # kijk of het een XML bestand is
       if os.path.splitext(metadata_xml)[1] == '.xml':
-        # open het bestand en plaats het in de xml veriablele
+        # open het bestand en plaats het in de xml variablele
         with open(self.XML_dir+os.sep+metadata_xml, 'r') as bestand: xml = bestand.read().strip()
         # loop door de ISO profielen
         for iso_profiel in self.ISO_profielen:
@@ -1680,13 +1712,19 @@ class MainWindow(wx.Frame):
     
 # -----
 
-  def VoegtoeFilter(self, titel, tekst):
+  def VoegtoeFilter(self, bestandsnaam, titel, tekst):
     """   """
     # maak een variabele voegtoe
     voegtoe = False
     # als er geen filter is voeg alles toe
-    if self.ortitel == '' and self.orresume == '': voegtoe = True
+    if self.orbestandsnaam == '' and self.ortitel == '' and self.orresume == '': voegtoe = True
     else:
+      # kijk of het filter self.orbestandsnaam niet leeg is 
+      if self.orbestandsnaam != '':
+        # split het filter self.orbestandsnaam op ;
+        for item in self.orbestandsnaam.split(self.sep):
+          # kijk of het filter voorkomt in de ortitel
+          if item.encode('utf_8').strip(' ').upper() in bestandsnaam.upper(): voegtoe = True      
       # kijk of het filter self.ortitel niet leeg is 
       if self.ortitel != '':
         # split het filter self.titel op ;
