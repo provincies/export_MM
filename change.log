@@ -1,15 +1,1 @@
-1.0.4  2017-04-03
 
-1. "Filter tekst" is aangepast met een filter voor de bestandsnaam en gewijzigd 
-   in "Filter BTS"(Bestandsnaam Titel Samenvatting)
-   
-2. Er is een nieuw filter "filter zoek string", dit filter zoekt naar de 'zoek_string' die in het configuratie bestand staat.
-   Als de 'zoek_string' bestaat, in het configuratie bestand, wordt het filter toegevoegd aan het menu.
-   
-3. bug: MD_LegalConstraints in de functie 'repareer publicdomain' aangepast voor singlecore processors.
-
-
-1.0.3  2017-02-06
-
-  Belangrijkste aanpassingen:
-  1. Ontsluiten van de help
